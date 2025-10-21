@@ -1,8 +1,10 @@
+import time
 import csv
 from dataclasses import dataclass, fields, astuple
 import requests
 from bs4 import BeautifulSoup, Tag
 
+TIME_BETWEEN_REQUESTS = 0.5
 BASE_URL = "https://quotes.toscrape.com"
 
 
@@ -24,17 +26,20 @@ def parse_quote(quote: Tag) -> Quote:
     )
 
 
-def get_quotes() -> list[Quote]:
+def get_quotes(session: requests.Session) -> list[Quote]:
     page_num = 1
-    text = requests.get(f"{BASE_URL}/page/{page_num}").content
-    soup = BeautifulSoup(text, "html.parser")
+    response = session.get(f"{BASE_URL}/page/{page_num}", timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "html.parser")
     quotes = soup.select(".quote")
     next_page = soup.select_one(".next")
 
     while next_page:
+        time.sleep(TIME_BETWEEN_REQUESTS)
         page_num += 1
-        text = requests.get(f"{BASE_URL}/page/{page_num}").content
-        soup = BeautifulSoup(text, "html.parser")
+        response = session.get(f"{BASE_URL}/page/{page_num}", timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, "html.parser")
         quotes.extend(soup.select(".quote"))
         next_page = soup.select_one(".next")
 
@@ -49,7 +54,8 @@ def write_to_csv(csv_path: str, quotes: list[Quote]) -> None:
 
 
 def main(output_csv_path: str) -> None:
-    quotes = get_quotes()
+    session = requests.Session()
+    quotes = get_quotes(session)
     write_to_csv(output_csv_path, quotes)
 
 
