@@ -1,6 +1,6 @@
 import time
 import csv
-from dataclasses import dataclass, fields, astuple
+from dataclasses import dataclass, fields
 import requests
 from bs4 import BeautifulSoup, Tag
 
@@ -50,7 +50,9 @@ def write_to_csv(csv_path: str, quotes: list[Quote]) -> None:
     with open(csv_path, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(QUOTE_FIELDS)
-        writer.writerows(astuple(quote) for quote in quotes)
+        writer.writerows(
+            (quote.text, quote.author, str(quote.tags)) for quote in quotes
+        )
 
 
 def main(output_csv_path: str) -> None:
