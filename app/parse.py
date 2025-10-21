@@ -1,6 +1,7 @@
-import time
 import csv
+import time
 from dataclasses import dataclass, fields
+
 import requests
 from bs4 import BeautifulSoup, Tag
 
